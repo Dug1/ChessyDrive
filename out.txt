@@ -1,0 +1,37 @@
+Unable to locate tools.jar. Expected to find it in C:\Program Files\Java\jre7\lib\tools.jar
+Buildfile: C:\Users\MorTorq\code\ChessyDrive\build.xml
+
+-pre-init:
+
+-do-init:
+
+-post-init:
+
+-warn-jar-file:
+
+init:
+
+-set-selector-for-nonbasestation:
+
+-prim-find-spots:
+
+-checkhasremoteaddress:
+
+-do-find-spots:
+
+-pre-run:
+
+-do-run:
+   [frcrun] [cRIO] [OTA Server] ********* REBOOTING cRIO *********
+   [frcrun] [cRIO] 
+   [frcrun]    Waiting for cRIO to reboot (1s)
+   [frcrun]    Waiting for cRIO to reboot (2s)
+   [frcrun]    Waiting for cRIO to reboot (3s)
+   [frcrun]    Waiting for cRIO to reboot (4s)
+   [frcrun]    Waiting for cRIO to reboot (5s)
+   [frcrun]    Waiting for cRIO to reboot (6s)
+   [frcrun]    Waiting for cRIO to reboot (7s)
+   [frcrun]    Waiting for cRIO to reboot (8s)
+Terminate batch job (Y/N)? 
+nt run 
+ant run 

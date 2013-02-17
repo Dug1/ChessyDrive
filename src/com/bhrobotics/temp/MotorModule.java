@@ -13,7 +13,7 @@ public class MotorModule {
 	controllers[1] = new Victor(1, motorPortTwo);
 	in = new Solenoid(1, solenoidPortOne);
 	out = new Solenoid(1, solenoidPortTwo);
-	//figure out default config
+	setHighSpeed();
     }
 
     public Victor[] getControllers() {
