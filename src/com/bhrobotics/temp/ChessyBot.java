@@ -9,9 +9,11 @@ package com.bhrobotics.temp;
 
 
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Relay;
+import edu.wpi.first.wpilibj.Victor;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -21,13 +23,12 @@ import edu.wpi.first.wpilibj.Relay;
  * directory.
  */
 public class ChessyBot extends IterativeRobot {
-	
-	private double turnScale = 0.65;
-	private double threshold = .1;
-	
+
 	private Joystick joystick;
 	private MotorModule left;
 	private MotorModule right;
+	private Intake intake;
+	private Shooter shooter;
 	private DigitalInput valve;
 	private Relay compressor;
 
@@ -35,55 +36,73 @@ public class ChessyBot extends IterativeRobot {
 		joystick = new Joystick(1);
 		left = new MotorModule(1,3,1,2);
 		right = new MotorModule(2,4,3,4);
+		intake = new Intake(new Victor(1,5), new Victor(1,6), new Victor(1,7));
+		shooter = new Shooter(new Victor(1,8), new Victor(1,9), new Encoder(1,2,1,3));
 		valve = new DigitalInput(1,1);
 		compressor = new Relay(1,1);
 	}
-
-	public void disabledInit() {
-		compressor.set(Relay.Value.kOff);
-	}
-
-	/**
-	 * This function is called periodically during autonomous
-	 */
-	public void autonomousPeriodic() {
-	}
-
 	/**
 	 * This function is called periodically during operator control
 	 */
-	public void teleopPeriodic() {
+	public void teleopPeriodic() { 
 		if(!valve.get()) {
 			compressor.set(Relay.Value.kForward);
 		} else {
 			compressor.set(Relay.Value.kOff);
 		}
+
 		double angle = joystick.getDirectionRadians();
 		double magnitude = 0;
 		if(joystick.getMagnitude() > 0.1) {
 			magnitude = (1 - joystick.getRawAxis(3))/2;
 		}
-		double x = turnScale * magnitude * Math.sin(angle);
-		if(left.isHighSpeed() && right.isHighSpeed() && Math.abs(x) < threshold) {
-			x = 0.0;
-		}
+		double x = magnitude * Math.sin(angle);
 		double y = magnitude * Math.cos(angle);
 
-		if(joystick.getRawButton(4)) {
+		//gear shift
+		if(joystick.getRawButton(3)) {
 			left.setHighSpeed();
 			right.setHighSpeed();
-		}
-		if(joystick.getRawButton(3)) {
+		} else if(joystick.getRawButton(4)) {
 			left.setLowSpeed();
 			right.setLowSpeed();
-		} 
+		} else {}
 
-		left.set(y + x);
-		right.set(-y + x);
+		//intake hinge
+
+		intake.setHingeSpeed((1 - joystick.getRawAxis(4))/2);
+		if(joystick.getRawButton(1)) {
+			intake.bumpUp();
+		} else if(joystick.getRawButton(6)) {
+			intake.bumpDown();
+		} else {
+			intake.stop();
+		}
+
+		//intake rollers
+
+		if(joystick.getRawButton(9)) {
+			intake.turnOn();
+		} else if(joystick.getRawButton(10)) {
+			intake.flush();
+		} else {
+			intake.turnOff();
+		}
+
+		//shooter
+		shooter.setSpeed((1 - joystick.getRawAxis(5))/2);
+		if(joystick.getRawButton(2)) {
+			shooter.turnOn();
+		} else {
+			shooter.turnOff();
+		}
+
+		left.set(y - x);
+		right.set(y + x);
 		System.out.println(debugString());
 	}
 
 	public String debugString() {
-		return "[left]:" + left.get() + "[right]:" + right.get();  
+		return "[left]:" + left.get() + "[right]:" + right.get() + "[shooter]:" + shooter.getSpeed()  + "[hinge]:" + intake.getHingeSpeed();  
 	}
 }
