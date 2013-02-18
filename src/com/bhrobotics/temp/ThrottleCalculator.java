@@ -17,10 +17,14 @@ public class ThrottleCalculator implements DriveCalculator {
 	public void recalculate() {
 		double y = joystick.getRawAxis(2);
 		double x = joystick.getRawAxis(1);
-		double magnitude = Math.sqrt((y * y) + (x * x));
-		angle = MathUtils.acos(x / magnitude);
-		if (y < 0) {
-			angle = -angle;
+		magnitude = Math.sqrt((y * y) + (x * x));
+		if(magnitude != 0) {
+			angle = MathUtils.acos(x / magnitude);
+			if (y < 0) {
+				angle = -angle;
+			}
+		} else {
+			angle = 0;
 		}
 	}
 

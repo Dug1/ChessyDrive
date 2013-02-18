@@ -10,20 +10,25 @@ public class CheesyDrive implements DriveStyle {
 		this.joystick = joystick;
 	}
 
-	public void drive(boolean reverse, double angle, double magnitude, MotorModule left, MotorModule right ) {
+	public double[] drive(boolean reverse, DriveCalculator calculator ) {
 		double direction = 1.0;
 		if (reverse) {
 			direction = -1.0;
 		}
 
-		if (joystick.getMagnitude() > 0.1) {
+		double magnitude = 0;
+		
+		if (calculator.getMagnitude() > 0.1) {
 			magnitude = (1 - joystick.getRawAxis(3)) / 2;
 		}
-
-		double x = magnitude * Math.cos(angle);
-		double y = magnitude * Math.sin(angle);
-		left.set(direction * (y - x));
-		right.set(direction * (y + x));
+		
+		calculator.recalculate();
+		
+		double x = direction * magnitude * Math.cos(calculator.getAngle());
+		double y = direction * magnitude * Math.sin(calculator.getAngle());
+		
+		double[] coordinates = {x,y};	
+		
+		return coordinates;
 	}
-
 }

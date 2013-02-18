@@ -1,25 +1,23 @@
 package com.bhrobotics.temp;
 
-import edu.wpi.first.wpilibj.Joystick;
 
 public class OneStickDrive implements DriveStyle {
 
-	private Joystick joystick;
 
-	public OneStickDrive(Joystick joystick) {
-		this.joystick = joystick;
-	}
-
-	public void drive(boolean reverse, double angle, double magnitude,  MotorModule left, MotorModule right) {
+	public double[] drive(boolean reverse, DriveCalculator calculator) {
+		
 		double direction = 1.0;
 		if (reverse) {
 			direction = -1.0;
 		}
 
-		double x = magnitude * Math.cos(angle);
-		double y = magnitude * Math.sin(angle);
-		left.set(direction * (y - x));
-		right.set(direction * (y + x));
+		calculator.recalculate();
+
+		double x = direction * calculator.getMagnitude() * Math.cos(calculator.getAngle());
+		double y = direction * calculator.getMagnitude() * Math.sin(calculator.getAngle());
+		
+		double[] coordinates = {x,y};
+		return coordinates;
 	}
 
 }

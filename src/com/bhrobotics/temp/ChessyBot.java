@@ -34,6 +34,8 @@ public class ChessyBot extends IterativeRobot {
 	private OneStickDrive stick;
 	private ThrottleCalculator throttle;
 	private TwistCalculator twist;
+	private DriveStyle style;
+	private DriveCalculator calculator;
 
 	public void robotInit() {
 		joystick = new Joystick(1);
@@ -44,19 +46,20 @@ public class ChessyBot extends IterativeRobot {
 		valve = new DigitalInput(1, 1);
 		compressor = new Relay(1, 1);
 		cheesy = new CheesyDrive(joystick);
-		stick = new OneStickDrive(joystick);
+		stick = new OneStickDrive();
 		throttle = new ThrottleCalculator(joystick);
 		twist = new TwistCalculator(joystick);
+		style = stick;
+		calculator = twist;
 
 	}
 
 	/**
 	 * This function is called periodically during operator control
 	 */
+	
 	public void teleopPeriodic() {
-		DriveStyle style = stick;
-		DriveCalculator calculator = twist;
-
+		
 		if (joystick.getRawButton(7)) {
 			compressor.set(Relay.Value.kForward);
 		} else {
@@ -120,10 +123,14 @@ public class ChessyBot extends IterativeRobot {
 		}
 
 		// drive train
-		calculator.recalculate();
-		style.drive(joystick.getRawButton(8), calculator.getAngle(), calculator.getMagnitude(), left, right);
+		double[] coordinates = style.drive(joystick.getRawButton(8), calculator);
+		double x = coordinates[0];
+		double y = coordinates[1];
+		
+		left.set(-y + x);
+		right.set(y + x);
 
-		// System.out.println(debugString());
+		//System.out.println(debugString());
 	}
 
 	public String debugString() {
