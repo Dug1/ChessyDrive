@@ -7,7 +7,6 @@
 
 package com.bhrobotics.temp;
 
-
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.IterativeRobot;
@@ -31,78 +30,103 @@ public class ChessyBot extends IterativeRobot {
 	private Shooter shooter;
 	private DigitalInput valve;
 	private Relay compressor;
+	private CheesyDrive cheesy;
+	private OneStickDrive stick;
+	private ThrottleCalculator throttle;
+	private TwistCalculator twist;
 
 	public void robotInit() {
 		joystick = new Joystick(1);
-		left = new MotorModule(1,3,1,2);
-		right = new MotorModule(2,4,3,4);
-		intake = new Intake(new Victor(1,5), new Victor(1,6), new Victor(1,7));
-		shooter = new Shooter(new Victor(1,8), new Victor(1,9), new Encoder(1,2,1,3));
-		valve = new DigitalInput(1,1);
-		compressor = new Relay(1,1);
+		left = new MotorModule(1, 3, 1, 2);
+		right = new MotorModule(2, 4, 3, 4);
+		intake = new Intake(new Victor(1, 5), new Victor(1, 6), new Victor(1, 7));
+		shooter = new Shooter(new Victor(1, 8), new Victor(1, 9), new Encoder(1, 2, 1, 3));
+		valve = new DigitalInput(1, 1);
+		compressor = new Relay(1, 1);
+		cheesy = new CheesyDrive(joystick);
+		stick = new OneStickDrive(joystick);
+		throttle = new ThrottleCalculator(joystick);
+		twist = new TwistCalculator(joystick);
+
 	}
+
 	/**
 	 * This function is called periodically during operator control
 	 */
-	public void teleopPeriodic() { 
-		if(!valve.get()) {
+	public void teleopPeriodic() {
+		DriveStyle style = stick;
+		DriveCalculator calculator = twist;
+
+		if (joystick.getRawButton(7)) {
 			compressor.set(Relay.Value.kForward);
 		} else {
 			compressor.set(Relay.Value.kOff);
 		}
 
-		double angle = joystick.getDirectionRadians();
-		double magnitude = 0;
-		if(joystick.getMagnitude() > 0.1) {
-			magnitude = (1 - joystick.getRawAxis(3))/2;
+		// setStyle
+		if (joystick.getRawButton(9)) {
+			style = cheesy;
+			System.out.println("Switched to cheesy drive.");
+		} else if (joystick.getRawButton(10)) {
+			style = stick;
+			System.out.println("Switched to normal drive");
 		}
-		double x = magnitude * Math.sin(angle);
-		double y = magnitude * Math.cos(angle);
 
-		//gear shift
-		if(joystick.getRawButton(3)) {
+		// setTwist
+		if (joystick.getRawButton(11)) {
+			calculator = twist;
+			System.out.println("Switched to twist");
+		} else if (joystick.getRawButton(12)) {
+			calculator = throttle;
+			System.out.println("Switched to x-axis");
+		}
+
+		// gear shift
+		if (joystick.getRawButton(5)) {
 			left.setHighSpeed();
 			right.setHighSpeed();
-		} else if(joystick.getRawButton(4)) {
+		} else {
 			left.setLowSpeed();
 			right.setLowSpeed();
-		} else {}
+		}
 
-		//intake hinge
+		// intake hinge
 
-		intake.setHingeSpeed((1 - joystick.getRawAxis(4))/2);
-		if(joystick.getRawButton(1)) {
+		intake.setHingeSpeed((1 - joystick.getRawAxis(4)) / 2);
+		if (joystick.getRawButton(1)) {
 			intake.bumpUp();
-		} else if(joystick.getRawButton(6)) {
+		} else if (joystick.getRawButton(6)) {
 			intake.bumpDown();
 		} else {
 			intake.stop();
 		}
 
-		//intake rollers
+		// intake rollers
 
-		if(joystick.getRawButton(9)) {
+		if (joystick.getRawButton(3)) {
 			intake.turnOn();
-		} else if(joystick.getRawButton(10)) {
+		} else if (joystick.getRawButton(4)) {
 			intake.flush();
 		} else {
 			intake.turnOff();
 		}
 
-		//shooter
-		shooter.setSpeed((1 - joystick.getRawAxis(5))/2);
-		if(joystick.getRawButton(2)) {
+		// shooter
+		shooter.setSpeed((1 - joystick.getRawAxis(5)) / 2);
+		if (joystick.getRawButton(2)) {
 			shooter.turnOn();
 		} else {
 			shooter.turnOff();
 		}
 
-		left.set(y - x);
-		right.set(y + x);
-		System.out.println(debugString());
+		// drive train
+		calculator.recalculate();
+		style.drive(joystick.getRawButton(8), calculator.getAngle(), calculator.getMagnitude(), left, right);
+
+		// System.out.println(debugString());
 	}
 
 	public String debugString() {
-		return "[left]:" + left.get() + "[right]:" + right.get() + "[shooter]:" + shooter.getSpeed()  + "[hinge]:" + intake.getHingeSpeed();  
+		return "[left]:" + left.get() + "[right]:" + right.get() + "[shooter]:" + shooter.getSpeed() + "[hinge]:" + intake.getHingeSpeed();
 	}
 }
