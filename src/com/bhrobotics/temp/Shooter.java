@@ -6,6 +6,7 @@ public class Shooter {
 	public static final double MAX_SPEED = -1.0;
 	public static final double AUTO_SPEED = -0.4;
 	private double speed = 0;
+	private double stop = 0.0;
 
 	private Victor fast;
 	private Victor slow;
@@ -24,8 +25,8 @@ public class Shooter {
 	}
 
 	public void turnOff() {
-		fast.set(0.0);
-		slow.set(0.0);
+		fast.set(stop);
+		slow.set(stop);
 	}
 
 	public double getSpeed() {

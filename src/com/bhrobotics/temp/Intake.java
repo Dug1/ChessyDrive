@@ -15,6 +15,9 @@ public class Intake {
 	private Victor rollerTop;
 	private Encoder encoder;
 	private double goalValue;
+	private double goValue = 1.0;
+	private double backValue = -1.0;
+	private double stop = 0.0;
 
 	public Intake(Victor hinge, Victor rollerBottom, Victor rollerTop, Encoder encoder) {
 		this.hinge = hinge;
@@ -35,34 +38,34 @@ public class Intake {
 	}
 
 	public void turnOn() {
-		rollerTop.set(-1.0);
-		rollerBottom.set(-1.0);
+		rollerTop.set(backValue);
+		rollerBottom.set(backValue);
 	}
 	
 	public void turnOnTop() {
-		rollerTop.set(-1.0);
+		rollerTop.set(backValue);
 	}
 	
 	public void turnOffTop() {
-		rollerTop.set(0.0);
+		rollerTop.set(stop);
 	}
 	
 	public void turnOnBottom() {
-		rollerBottom.set(-1.0);
+		rollerBottom.set(backValue);
 	}
 
 	public void turnOffBottom() {
-		rollerBottom.set(0.0);
+		rollerBottom.set(stop);
 	}
 	
 	public void turnOff() {
-		rollerTop.set(0.0);
-		rollerBottom.set(0.0);
+		rollerTop.set(stop);
+		rollerBottom.set(stop);
 	}
 
 	public void flush() {
-		rollerTop.set(1.0);
-		rollerBottom.set(1.0);
+		rollerTop.set(goValue);
+		rollerBottom.set(goValue);
 	}
 
 	public void bumpUp() {
@@ -74,7 +77,7 @@ public class Intake {
 	}
 
 	public void stop() {
-		hinge.set(0.0);
+		hinge.set(stop);
 	}
 
 	public boolean getHingeDistance() {
@@ -104,7 +107,7 @@ public class Intake {
 		} else if (encoder.getDistance() > goalValue) {
 			hinge.set(-hingeSpeed);
 		} else {
-			hinge.set(0);
+			hinge.set(stop);
 		}
 	}
 	
