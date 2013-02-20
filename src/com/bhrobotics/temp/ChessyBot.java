@@ -7,6 +7,9 @@
 
 package com.bhrobotics.temp;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.IterativeRobot;
@@ -23,12 +26,14 @@ import edu.wpi.first.wpilibj.Victor;
  */
 public class ChessyBot extends IterativeRobot {
 
-	private Joystick joystick;
+	private Joystick driverJoystick;
+	private Joystick intakeJoystick;
 	private MotorModule left;
 	private MotorModule right;
 	private Intake intake;
 	private Shooter shooter;
-	private DigitalInput valve;
+	//private DigitalInput valve;
+	private DigitalInput reset;
 	private Relay compressor;
 	private CheesyDrive cheesy;
 	private OneStickDrive stick;
@@ -36,104 +41,200 @@ public class ChessyBot extends IterativeRobot {
 	private TwistCalculator twist;
 	private DriveStyle style;
 	private DriveCalculator calculator;
+	private DigitalInput input;
+	private DigitalInput other;
+	private boolean runningAuto = false;
+	private Timer timer;
+	private DigitalInput valve;
 
 	public void robotInit() {
-		joystick = new Joystick(1);
+		driverJoystick = new Joystick(2);
+		intakeJoystick = new Joystick(1);
 		left = new MotorModule(1, 3, 1, 2);
 		right = new MotorModule(2, 4, 3, 4);
-		intake = new Intake(new Victor(1, 5), new Victor(1, 6), new Victor(1, 7));
-		shooter = new Shooter(new Victor(1, 8), new Victor(1, 9), new Encoder(1, 2, 1, 3));
-		valve = new DigitalInput(1, 1);
+		intake = new Intake(new Victor(1, 5), new Victor(1, 6), new Victor(1, 7), new Encoder(new DigitalInput(1,1), new DigitalInput(1,2)));
+		shooter = new Shooter(new Victor(1, 8), new Victor(1, 9));
+		valve = new DigitalInput(1, 3);
 		compressor = new Relay(1, 1);
-		cheesy = new CheesyDrive(joystick);
+		cheesy = new CheesyDrive(driverJoystick);
 		stick = new OneStickDrive();
-		throttle = new ThrottleCalculator(joystick);
-		twist = new TwistCalculator(joystick);
+		throttle = new ThrottleCalculator(driverJoystick);
+		twist = new TwistCalculator(driverJoystick);
 		style = stick;
 		calculator = twist;
+		reset = new DigitalInput(1,9);
+	}
 
+	public void autonomousInit() {
+		Timer timer = new Timer(); 
+
+		//stop all functions
+		timer.schedule(new TimerTask() {
+			public void run() {
+				shooter.setSpeed(0);
+				intake.setHingeSpeed(0);
+				intake.setGoalValue(Intake.START_POSITION);
+				intake.setHingePosition();
+			}
+		}, 10000);
+
+		//turn on shooter
+		timer.schedule(new TimerTask() {
+
+			public void run() {
+				shooter.setSpeed(Shooter.AUTO_SPEED);
+			}
+
+		}, 1000);
+
+		intake.setHingeSpeed(Intake.MAX_SPEED);
+	}
+
+	private class StopMovementTask extends TimerTask {
+
+		public void run() {
+			left.set(0);
+			right.set(0);
+			runningAuto = false;
+		}
 	}
 
 	/**
 	 * This function is called periodically during operator control
 	 */
-	
+
+	public void teleopInit() {
+		timer = new Timer();
+	}
+
 	public void teleopPeriodic() {
-		
-		if (joystick.getRawButton(7)) {
+		//Compressor
+		if (driverJoystick.getRawButton(7) && !valve.get()) {
 			compressor.set(Relay.Value.kForward);
 		} else {
 			compressor.set(Relay.Value.kOff);
 		}
 
 		// setStyle
-		if (joystick.getRawButton(9)) {
+		if (driverJoystick.getRawButton(9)) {
 			style = cheesy;
 			System.out.println("Switched to cheesy drive.");
-		} else if (joystick.getRawButton(10)) {
+		} else if (driverJoystick.getRawButton(10)) {
 			style = stick;
 			System.out.println("Switched to normal drive");
 		}
 
 		// setTwist
-		if (joystick.getRawButton(11)) {
+		if (driverJoystick.getRawButton(11)) {
 			calculator = twist;
 			System.out.println("Switched to twist");
-		} else if (joystick.getRawButton(12)) {
+		} else if (driverJoystick.getRawButton(12)) {
 			calculator = throttle;
 			System.out.println("Switched to x-axis");
 		}
 
 		// gear shift
-		if (joystick.getRawButton(5)) {
-			left.setHighSpeed();
-			right.setHighSpeed();
-		} else {
+		if (driverJoystick.getRawButton(5)) {
 			left.setLowSpeed();
 			right.setLowSpeed();
+		} else {
+			left.setHighSpeed();
+			right.setHighSpeed();
 		}
 
 		// intake hinge
 
-		intake.setHingeSpeed((1 - joystick.getRawAxis(4)) / 2);
-		if (joystick.getRawButton(1)) {
-			intake.bumpUp();
-		} else if (joystick.getRawButton(6)) {
-			intake.bumpDown();
+		if (intakeJoystick.getRawButton(9)) {
+			intake.setGoalValue(Intake.START_POSITION);
+		} else if (intakeJoystick.getRawButton(11)) {
+			intake.setGoalValue(Intake.FEEDER_POSITION);
+		} else if (intakeJoystick.getRawButton(12)) {
+			intake.setGoalValue(Intake.GROUND_POSITION);
 		} else {
-			intake.stop();
+			intake.setHingeMotor(intakeJoystick.getY() * intake.MAX_SPEED);
+		}
+		//intake.setHingePosition();
+
+		//reset intake
+		if (reset.get()) {
+			intake.reset();
 		}
 
 		// intake rollers
 
-		if (joystick.getRawButton(3)) {
-			intake.turnOn();
-		} else if (joystick.getRawButton(4)) {
-			intake.flush();
+		if(!intakeJoystick.getRawButton(2)) {
+			if (intakeJoystick.getRawButton(5)) {
+				intake.turnOnTop();
+			} else {
+				intake.turnOffTop();
+			}
+			
+			if(intakeJoystick.getRawButton(3)) {
+				intake.turnOnBottom();
+			} else {
+				intake.turnOffBottom();
+			}
 		} else {
-			intake.turnOff();
+			intake.flush();
 		}
 
 		// shooter
-		shooter.setSpeed((1 - joystick.getRawAxis(5)) / 2);
-		if (joystick.getRawButton(2)) {
+		shooter.setSpeed((1 - driverJoystick.getRawAxis(5)) / 2);
+		if (driverJoystick.getRawButton(2)) {
 			shooter.turnOn();
 		} else {
 			shooter.turnOff();
 		}
 
+		//		if(!runningAuto) {
+		//			TimerTask t = new StopMovementTask();
+		//			if(driverJoystick.getRawButton(3)) {
+		//				left.set(1);
+		//				right.set(-1);
+		//				timer.schedule(t, 1000);
+		//				runningAuto = true;
+		//			} else if(driverJoystick.getRawButton(4)) {
+		//				left.set(1);
+		//				right.set(-1);
+		//				timer.schedule(t,2000);
+		//				runningAuto = true;
+		//			} else if(driverJoystick.getRawButton(5)) {
+		//				left.set(1);
+		//				right.set(-1);
+		//				timer.schedule(t, 3000);
+		//				runningAuto = true;
+		//			} else if(driverJoystick.getRawButton(1)) {
+		//				left.set(1);
+		//				right.set(-1);
+		//				timer.schedule(t, 4000);
+		//				runningAuto = true;
+		//			} else if(driverJoystick.getRawButton(6)) {
+		//				left.set(1);
+		//				right.set(-1);
+		//				timer.schedule(t, 5000);
+		//				runningAuto = true;
+		//			}
+		//		}
+
+
+		//if (!runningAuto) {
 		// drive train
-		double[] coordinates = style.drive(joystick.getRawButton(8), calculator);
+		double[] coordinates = style.drive(driverJoystick.getRawButton(8), calculator);
 		double x = coordinates[0];
 		double y = coordinates[1];
-		
+		if (Math.abs(x) < Math.abs(0.4 * y)) {
+			x = 0;
+		} else if (Math.abs(y) < Math.abs(0.4 * x)) {
+			y = 0;
+		}
 		left.set(-y + x);
 		right.set(y + x);
+		//}
 
 		//System.out.println(debugString());
 	}
 
 	public String debugString() {
-		return "[left]:" + left.get() + "[right]:" + right.get() + "[shooter]:" + shooter.getSpeed() + "[hinge]:" + intake.getHingeSpeed();
+		return "[hinge]:" + intake.getHingeDistance();
 	}
 }
