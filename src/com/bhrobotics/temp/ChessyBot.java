@@ -37,7 +37,7 @@ public class ChessyBot extends IterativeRobot {
 	private Relay compressor;
 	private CheesyDrive cheesy;
 	private OneStickDrive stick;
-	private ThrottleCalculator throttle;
+	//private ThrottleCalculator throttle;
 	private TwistCalculator twist;
 	private DriveStyle style;
 	private DriveCalculator calculator;
@@ -46,6 +46,10 @@ public class ChessyBot extends IterativeRobot {
 	private boolean runningAuto = false;
 	private Timer timer;
 	private DigitalInput valve;
+	private double turningScale;
+	private double normalTurning = 0.75;
+	private double reallySlowTurning = 0.2;
+	
 
 	public void robotInit() {
 		driverJoystick = new Joystick(2);
@@ -53,16 +57,17 @@ public class ChessyBot extends IterativeRobot {
 		left = new MotorModule(1, 3, 1, 2);
 		right = new MotorModule(2, 4, 3, 4);
 		intake = new Intake(new Victor(1, 5), new Victor(1, 6), new Victor(1, 7), new Encoder(new DigitalInput(1,1), new DigitalInput(1,2)));
-		shooter = new Shooter(new Victor(1, 8), new Victor(1, 9));
+		shooter = new Shooter(new Victor(1, 8), new Victor(1, 9), null);
 		valve = new DigitalInput(1, 3);
 		compressor = new Relay(1, 1);
 		cheesy = new CheesyDrive(driverJoystick);
 		stick = new OneStickDrive();
-		throttle = new ThrottleCalculator(driverJoystick);
+		//throttle = new ThrottleCalculator(driverJoystick);
 		twist = new TwistCalculator(driverJoystick);
 		style = stick;
 		calculator = twist;
 		reset = new DigitalInput(1,9);
+		shooter.start();
 	}
 
 	public void autonomousInit() {
@@ -98,13 +103,11 @@ public class ChessyBot extends IterativeRobot {
 			runningAuto = false;
 		}
 	}
-
 	/**
 	 * This function is called periodically during operator control
 	 */
 
 	public void teleopInit() {
-		timer = new Timer();
 	}
 
 	public void teleopPeriodic() {
@@ -121,17 +124,17 @@ public class ChessyBot extends IterativeRobot {
 			System.out.println("Switched to cheesy drive.");
 		} else if (driverJoystick.getRawButton(10)) {
 			style = stick;
-			System.out.println("Switched to normal drive");
+			System.out.println("Switched to normal drive.");
 		}
 
 		// setTwist
 		if (driverJoystick.getRawButton(11)) {
 			calculator = twist;
 			System.out.println("Switched to twist");
-		} else if (driverJoystick.getRawButton(12)) {
+		} /*else if (driverJoystick.getRawButton(12)) {
 			calculator = throttle;
 			System.out.println("Switched to x-axis");
-		}
+		}*/
 
 		// gear shift
 		if (driverJoystick.getRawButton(5)) {
@@ -144,13 +147,11 @@ public class ChessyBot extends IterativeRobot {
 
 		// intake hinge
 
-		if (intakeJoystick.getRawButton(9)) {
-			intake.setGoalValue(Intake.START_POSITION);
-		} else if (intakeJoystick.getRawButton(11)) {
-			intake.setGoalValue(Intake.FEEDER_POSITION);
-		} else if (intakeJoystick.getRawButton(12)) {
-			intake.setGoalValue(Intake.GROUND_POSITION);
-		} else {
+		if (intakeJoystick.getRawButton(9) && !intake.topPressed()) {
+			intake.setHingeMotor(-1.0);                    //start position
+		} else if (intakeJoystick.getRawButton(11) && !intake.bottomPressed()) {
+			intake.setHingeMotor(1.0);                     //ground position
+		} else if (intakeJoystick.getRawButton(1)) {
 			intake.setHingeMotor(intakeJoystick.getY() * intake.MAX_SPEED);
 		}
 		//intake.setHingePosition();
@@ -162,7 +163,7 @@ public class ChessyBot extends IterativeRobot {
 
 		// intake rollers
 
-		if(!intakeJoystick.getRawButton(2)) {
+		if(!intakeJoystick.getRawButton(12)) {
 			if (intakeJoystick.getRawButton(5)) {
 				intake.turnOnTop();
 			} else {
@@ -184,6 +185,13 @@ public class ChessyBot extends IterativeRobot {
 			shooter.turnOn();
 		} else {
 			shooter.turnOff();
+		}
+		
+		// turning scale
+		if (driverJoystick.getRawButton(6)) {
+			turningScale = reallySlowTurning;
+		} else {
+			turningScale = normalTurning;
 		}
 
 		//		if(!runningAuto) {
@@ -222,11 +230,12 @@ public class ChessyBot extends IterativeRobot {
 		double[] coordinates = style.drive(driverJoystick.getRawButton(8), calculator);
 		double x = coordinates[0];
 		double y = coordinates[1];
-		if (Math.abs(x) < Math.abs(0.4 * y)) {
+		if (Math.abs(x) < Math.abs(0.5 * y)) {
 			x = 0;
-		} else if (Math.abs(y) < Math.abs(0.4 * x)) {
+		} else if (Math.abs(y) < Math.abs(0.5 * x)) {
 			y = 0;
 		}
+		x *= turningScale;
 		left.set(-y + x);
 		right.set(y + x);
 		//}

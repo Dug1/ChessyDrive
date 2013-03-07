@@ -13,7 +13,7 @@ public class OneStickDrive implements DriveStyle {
 
 		calculator.recalculate();
 
-		double x = direction * calculator.getMagnitude() * Math.cos(calculator.getAngle());
+		double x = calculator.getMagnitude() * Math.cos(calculator.getAngle());
 		double y = direction * calculator.getMagnitude() * Math.sin(calculator.getAngle());
 		
 		double[] coordinates = {x,y};

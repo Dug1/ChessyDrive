@@ -24,7 +24,7 @@ public class CheesyDrive implements DriveStyle {
 		
 		calculator.recalculate();
 		
-		double x = direction * magnitude * Math.cos(calculator.getAngle());
+		double x = direction * Math.cos(calculator.getAngle());
 		double y = direction * magnitude * Math.sin(calculator.getAngle());
 		
 		double[] coordinates = {x,y};	

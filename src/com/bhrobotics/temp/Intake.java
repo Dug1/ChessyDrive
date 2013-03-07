@@ -1,5 +1,6 @@
 package com.bhrobotics.temp;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Victor;
 
@@ -15,7 +16,9 @@ public class Intake {
 	private Victor rollerTop;
 	private Encoder encoder;
 	private double goalValue;
-
+	private DigitalInput topLimit = new DigitalInput(1);
+	private DigitalInput bottomLimit = new DigitalInput(2);
+	
 	public Intake(Victor hinge, Victor rollerBottom, Victor rollerTop, Encoder encoder) {
 		this.hinge = hinge;
 		this.rollerBottom = rollerBottom;
@@ -110,5 +113,13 @@ public class Intake {
 	
 	public void reset() {
 		encoder.reset();
+	}
+	
+	public boolean topPressed() {
+		return topLimit.get();
+	}
+	
+	public boolean bottomPressed() {
+		return bottomLimit.get();
 	}
 }
