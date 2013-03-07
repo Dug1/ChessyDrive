@@ -37,8 +37,8 @@ public class ChessyBot extends IterativeRobot {
 	private Relay compressor;
 	private CheesyDrive cheesy;
 	private OneStickDrive stick;
-	//private ThrottleCalculator throttle;
-	private TwistCalculator twist;
+	private TurnCalculator xAxis;
+	private TurnCalculator twist;
 	private DriveStyle style;
 	private DriveCalculator calculator;
 	private DigitalInput input;
@@ -56,14 +56,14 @@ public class ChessyBot extends IterativeRobot {
 		intakeJoystick = new Joystick(1);
 		left = new MotorModule(1, 3, 1, 2);
 		right = new MotorModule(2, 4, 3, 4);
-		intake = new Intake(new Victor(1, 5), new Victor(1, 6), new Victor(1, 7), new Encoder(new DigitalInput(1,1), new DigitalInput(1,2)));
+		intake = new Intake(new Victor(1, 5), new Victor(1, 6), new Victor(1, 7), new DigitalInput(1,1), new DigitalInput(1,2));
 		shooter = new Shooter(new Victor(1, 8), new Victor(1, 9), null);
 		valve = new DigitalInput(1, 3);
 		compressor = new Relay(1, 1);
 		cheesy = new CheesyDrive(driverJoystick);
 		stick = new OneStickDrive();
-		//throttle = new ThrottleCalculator(driverJoystick);
-		twist = new TwistCalculator(driverJoystick);
+		xAxis = new TurnCalculator(driverJoystick,2,6);
+		twist = new TurnCalculator(driverJoystick,2,1);
 		style = stick;
 		calculator = twist;
 		reset = new DigitalInput(1,9);
@@ -131,10 +131,10 @@ public class ChessyBot extends IterativeRobot {
 		if (driverJoystick.getRawButton(11)) {
 			calculator = twist;
 			System.out.println("Switched to twist");
-		} /*else if (driverJoystick.getRawButton(12)) {
-			calculator = throttle;
+		} else if (driverJoystick.getRawButton(12)) {
+			calculator = xAxis;
 			System.out.println("Switched to x-axis");
-		}*/
+		}
 
 		// gear shift
 		if (driverJoystick.getRawButton(5)) {

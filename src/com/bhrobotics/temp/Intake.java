@@ -16,13 +16,18 @@ public class Intake {
 	private Victor rollerTop;
 	private Encoder encoder;
 	private double goalValue;
-	private DigitalInput topLimit = new DigitalInput(1);
-	private DigitalInput bottomLimit = new DigitalInput(2);
-	
-	public Intake(Victor hinge, Victor rollerBottom, Victor rollerTop, Encoder encoder) {
+	private DigitalInput topLimit;
+	private DigitalInput bottomLimit;
+	private static double GO_VALUE = 1.0;
+	private static double BACK_VALUE = -1.0;
+	private static double STOP = 0.0;
+
+	public Intake(Victor hinge, Victor rollerBottom, Victor rollerTop, DigitalInput top, DigitalInput  bottom) {
 		this.hinge = hinge;
 		this.rollerBottom = rollerBottom;
 		this.rollerTop = rollerTop;
+		topLimit = top;
+		bottomLimit = bottom;
 		this.encoder = encoder;
 		encoder.setDistancePerPulse(0.001);
 		encoder.setMinRate(0);
@@ -38,34 +43,34 @@ public class Intake {
 	}
 
 	public void turnOn() {
-		rollerTop.set(-1.0);
-		rollerBottom.set(-1.0);
+		rollerTop.set(BACK_VALUE);
+		rollerBottom.set(BACK_VALUE);
 	}
 	
 	public void turnOnTop() {
-		rollerTop.set(-1.0);
+		rollerTop.set(BACK_VALUE);
 	}
 	
 	public void turnOffTop() {
-		rollerTop.set(0.0);
+		rollerTop.set(STOP);
 	}
 	
 	public void turnOnBottom() {
-		rollerBottom.set(-1.0);
+		rollerBottom.set(BACK_VALUE);
 	}
 
 	public void turnOffBottom() {
-		rollerBottom.set(0.0);
+		rollerBottom.set(STOP);
 	}
 	
 	public void turnOff() {
-		rollerTop.set(0.0);
-		rollerBottom.set(0.0);
+		rollerTop.set(STOP);
+		rollerBottom.set(STOP);
 	}
 
 	public void flush() {
-		rollerTop.set(1.0);
-		rollerBottom.set(1.0);
+		rollerTop.set(GO_VALUE);
+		rollerBottom.set(GO_VALUE);
 	}
 
 	public void bumpUp() {
@@ -77,7 +82,7 @@ public class Intake {
 	}
 
 	public void stop() {
-		hinge.set(0.0);
+		hinge.set(STOP);
 	}
 
 	public boolean getHingeDistance() {
@@ -107,7 +112,7 @@ public class Intake {
 		} else if (encoder.getDistance() > goalValue) {
 			hinge.set(-hingeSpeed);
 		} else {
-			hinge.set(0);
+			hinge.set(STOP);
 		}
 	}
 	

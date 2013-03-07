@@ -9,6 +9,7 @@ public class Shooter {
 	public static final double MAX_SPEED = -1.0;
 	protected static final double AUTO_SPEED = -1.0;
 	private double speed = 0;
+	private double stop = 0.0;
 
 	private Victor fast;
 	private Victor slow;

@@ -4,19 +4,23 @@ import com.sun.squawk.util.MathUtils;
 
 import edu.wpi.first.wpilibj.Joystick;
 
-public class TwistCalculator implements DriveCalculator {
+public class TurnCalculator implements DriveCalculator {
 
 	private double magnitude;
 	private double angle;
 	private Joystick joystick;
+	private int forwardAxis;
+	private int turnAxis;
 
-	public TwistCalculator(Joystick joystick) {
+	public TurnCalculator(Joystick joystick, int forwardAxis, int turnAxis) {
 		this.joystick = joystick;
+		this.forwardAxis = forwardAxis;
+		this.turnAxis = turnAxis;
 	}
 
 	public void recalculate() {
-		double y = joystick.getRawAxis(2);
-		double x = joystick.getRawAxis(6);
+		double y = joystick.getRawAxis(forwardAxis);
+		double x = joystick.getRawAxis(turnAxis);
 		magnitude = Math.sqrt((y * y) + (x * x));
 		if(magnitude != 0) {
 			angle = MathUtils.acos(x / magnitude);
