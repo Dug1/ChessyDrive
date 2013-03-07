@@ -13,13 +13,13 @@ public class Shooter {
 
 	private Victor fast;
 	private Victor slow;
-	private Encoder encoder;
+	//private Encoder encoder;
 	private PIDController controller;
 	private Thread thread;
 	private boolean stopped = false;
-	private Solenoid topSolenoid = new Solenoid(1,1);
-	private Solenoid bottomSolenoid = new Solenoid(2,2);
-	private DigitalInput limitSwitch = new DigitalInput(1);
+	private Solenoid topSolenoid = new Solenoid(1,3);
+	private Solenoid bottomSolenoid = new Solenoid(1,4);
+	private DigitalInput limitSwitch = new DigitalInput(4);
 	//private Thread pistonThread;
 	
 	private class PIDThread implements Runnable {
@@ -28,10 +28,10 @@ public class Shooter {
 		public Victor victor;
 		private Encoder encoder;
 		
-		public PIDThread(PIDController controller, Victor victor, Encoder encoder) {
+		public PIDThread(PIDController controller, Victor victor) {
 			this.controller = controller;
 			this.victor = victor;
-			this.encoder = encoder;
+			//this.encoder = encoder;
 		}
 		
 		public void run() {
@@ -71,7 +71,7 @@ public class Shooter {
 	public Shooter(Victor fast, Victor slow, Encoder encoder) {
 		this.fast = fast;
 		this.slow = slow;
-		this.encoder = encoder;
+		//this.encoder = encoder;
 		this.controller = new PIDController(1.3,0.1,0);
 		topSolenoid.set(true);
 		bottomSolenoid.set(false);
@@ -110,14 +110,13 @@ public class Shooter {
 	
 	public void start() {
 		stopped = false;
-		encoder.start();
-		thread = new Thread(new PIDThread(controller, fast, encoder));
-		thread.start();
+		//encoder.start();
+		thread = new Thread(new PIDThread(controller, fast));
 	}
 	
 	public void stop() {
 		stopped = true;
-		encoder.stop();
+		//encoder.stop();
 		thread = null;
 	}
 }

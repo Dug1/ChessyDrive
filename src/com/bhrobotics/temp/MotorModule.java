@@ -8,11 +8,11 @@ public class MotorModule {
 	private Solenoid out;
 	private Solenoid in;
 
-	public MotorModule(int motorPortOne, int motorPortTwo, int solenoidPortOne, int solenoidPortTwo) {
+	public MotorModule(int motorPortOne, int motorPortTwo, Solenoid solenoidOne, Solenoid solenoidTwo) {
 		controllers[0] = new Victor(1, motorPortOne);
 		controllers[1] = new Victor(1, motorPortTwo);
-		in = new Solenoid(1, solenoidPortOne);
-		out = new Solenoid(1, solenoidPortTwo);
+		in = solenoidOne;
+		out = solenoidTwo;
 		setHighSpeed();
 	}
 

@@ -11,10 +11,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Relay;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Victor;
 
 /**
@@ -49,17 +49,19 @@ public class ChessyBot extends IterativeRobot {
 	private double turningScale;
 	private double normalTurning = 0.75;
 	private double reallySlowTurning = 0.2;
+	private Solenoid solenoidOne = new Solenoid(1, 1);
+	private Solenoid solenoidTwo = new Solenoid(1, 2);
 	
 
 	public void robotInit() {
 		driverJoystick = new Joystick(2);
 		intakeJoystick = new Joystick(1);
-		left = new MotorModule(1, 3, 1, 2);
-		right = new MotorModule(2, 4, 3, 4);
+		left = new MotorModule(1, 3, solenoidOne, solenoidTwo);
+		right = new MotorModule(2, 4, solenoidOne,solenoidTwo);
 		intake = new Intake(new Victor(1, 5), new Victor(1, 6), new Victor(1, 7), new DigitalInput(1,1), new DigitalInput(1,2));
 		shooter = new Shooter(new Victor(1, 8), new Victor(1, 9), null);
 		valve = new DigitalInput(1, 3);
-		compressor = new Relay(1, 1);
+		compressor = new Relay(1, 8);
 		cheesy = new CheesyDrive(driverJoystick);
 		stick = new OneStickDrive();
 		xAxis = new TurnCalculator(driverJoystick,2,6);
@@ -79,7 +81,7 @@ public class ChessyBot extends IterativeRobot {
 				shooter.setSpeed(0);
 				intake.setHingeSpeed(0);
 				intake.setGoalValue(Intake.START_POSITION);
-				intake.setHingePosition();
+				//intake.setHingePosition();
 			}
 		}, 10000);
 
@@ -112,7 +114,7 @@ public class ChessyBot extends IterativeRobot {
 
 	public void teleopPeriodic() {
 		//Compressor
-		if (driverJoystick.getRawButton(7) && !valve.get()) {
+		if (!valve.get()) {
 			compressor.set(Relay.Value.kForward);
 		} else {
 			compressor.set(Relay.Value.kOff);
@@ -157,9 +159,9 @@ public class ChessyBot extends IterativeRobot {
 		//intake.setHingePosition();
 
 		//reset intake
-		if (reset.get()) {
+		/*if (reset.get()) {
 			intake.reset();
-		}
+		}*/
 
 		// intake rollers
 
@@ -243,7 +245,7 @@ public class ChessyBot extends IterativeRobot {
 		//System.out.println(debugString());
 	}
 
-	public String debugString() {
+	/*public String debugString() {
 		return "[hinge]:" + intake.getHingeDistance();
-	}
+	}*/
 }
